@@ -19,6 +19,8 @@ class ObsDictWrapper(VecEnvWrapper):
         self.venv = venv
 
         self.spaces = list(venv.observation_space.spaces.values())
+        print("here")
+        print(self.spaces[0])
 
         # get dimensions of observation and goal
         if isinstance(self.spaces[0], spaces.Discrete):
