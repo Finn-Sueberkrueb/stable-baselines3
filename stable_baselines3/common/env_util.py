@@ -74,7 +74,7 @@ def make_vec_env(
     def make_env(rank):
         def _init():
             if isinstance(env_id, str):
-                if env_id.startswith("RoboSkateParallel"):
+                if env_id.startswith("RoboSkate"):
                     env_kwargs.update({'rank': rank})
                 env = gym.make(env_id, **env_kwargs)
             else:
