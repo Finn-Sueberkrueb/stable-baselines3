@@ -217,10 +217,12 @@ class BaseAlgorithm(ABC):
                     wrap_with_vectranspose = wrap_with_vectranspose or (
                         is_image_space(space) and not is_image_space_channels_first(space)
                     )
+
             else:
                 wrap_with_vectranspose = is_image_space(env.observation_space) and not is_image_space_channels_first(
                     env.observation_space
                 )
+
 
             if wrap_with_vectranspose:
                 if verbose >= 1:

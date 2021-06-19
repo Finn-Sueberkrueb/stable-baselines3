@@ -5,25 +5,48 @@ from torch import nn
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
 class RoboSkateCombinedFeaturesExtractor(BaseFeaturesExtractor):
-    def __init__(self, observation_space: gym.spaces.Dict):
+    def __init__(self, observation_space: gym.spaces.Dict, features_dim=32):
         # We do not know features-dim here before going over all the items,
         # so put something dummy for now. PyTorch requires calling
         # nn.Module.__init__ before adding modules
-        super(RoboSkateCombinedFeaturesExtractor, self).__init__(observation_space, features_dim=20)
+        super(RoboSkateCombinedFeaturesExtractor, self).__init__(observation_space, features_dim=32)
 
         extractors = {}
 
         total_concat_size = 0
         # We need to know size of the output of this extractor,
         # so go over all the spaces and compute output feature sizes
-        print("Was here 444!!!")
         for key, subspace in observation_space.spaces.items():
             if key == "image":
-                print("Was here 555!!!")
-                # We will just downsample one channel of the image by 4x4 and flatten.
-                # Assume the image is single-channel (subspace.shape[0] == 0)
-                extractors[key] = nn.Sequential(nn.MaxPool2d(4), nn.Flatten())
-                total_concat_size += subspace.shape[1] // 4 * subspace.shape[2] // 4
+                # get imput layer (mostly RGB)
+                n_input_channels = subspace.shape[0]
+                #define CNN Layer
+                self.cnn = nn.Sequential(   nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
+                                            nn.ReLU(),
+                                            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
+                                            nn.ReLU(),
+                                            nn.Conv2d(64, 64, kernel_size=4, stride=2, padding=0),
+                                            nn.ReLU(),
+                                            nn.Flatten(),
+                                            )
+
+                # Compute shape by doing one forward pass
+                with th.no_grad():
+                    n_flatten = self.cnn(
+                        th.as_tensor(subspace.sample()[None]).float()
+                    ).shape[1]
+
+                print("CNN output size before linear: " + str(n_flatten))
+
+                # define Linear layer after CNN
+                self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim),
+                                            nn.ReLU(),
+                                            )
+
+                extractors[key] = nn.Sequential(self.cnn, self.linear)
+                # Set the feature dimention as the CNN latent space so the feature dimesnon will be lager (+numeric)
+                total_concat_size += features_dim
+
             elif key == "numeric":
                 # Run through a simple MLP
                 extractors[key] = nn.Linear(subspace.shape[0], 16)

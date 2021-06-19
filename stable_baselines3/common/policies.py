@@ -901,7 +901,6 @@ def get_policy_from_name(base_policy_type: Type[BasePolicy], name: str) -> Type[
     :param name: the policy name
     :return: the policy
     """
-    print(_policy_registry)
     if base_policy_type not in _policy_registry:
         raise KeyError(f"Error: the policy type {base_policy_type} is not registered!")
     if name not in _policy_registry[base_policy_type]:

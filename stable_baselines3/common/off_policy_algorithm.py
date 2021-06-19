@@ -565,6 +565,8 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                 # Rescale and perform action
                 new_obs, reward, done, infos = env.step(action)
 
+                # TODO: Someting i want to plot to tensorboard???
+
                 self.num_timesteps += 1
                 episode_timesteps += 1
                 num_collected_steps += 1
