@@ -4,6 +4,10 @@ from torch import nn
 
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 
+class Flatten(nn.Module):
+    def forward(self, input):
+        return input.view(input.size(0), -1)
+
 class RoboSkateCombinedFeaturesExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space: gym.spaces.Dict, features_dim=32):
         # We do not know features-dim here before going over all the items,
@@ -21,14 +25,26 @@ class RoboSkateCombinedFeaturesExtractor(BaseFeaturesExtractor):
                 # get imput layer (mostly RGB)
                 n_input_channels = subspace.shape[0]
                 #define CNN Layer
-                self.cnn = nn.Sequential(   nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
+                # small CNN version
+                smallcnn = nn.Sequential(nn.Conv2d(n_input_channels, 32, kernel_size=6, stride=3),
+                                         nn.ReLU(),
+                                         nn.Conv2d(32, 64, kernel_size=4, stride=2),
+                                         nn.ReLU(),
+                                         nn.Conv2d(64, 128, kernel_size=4, stride=2),
+                                         nn.ReLU()
+                                         )
+                # large CNN version
+                largecnn = nn.Sequential(   nn.Conv2d(n_input_channels, 32, kernel_size=4, stride=2),
                                             nn.ReLU(),
-                                            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
+                                            nn.Conv2d(32, 64, kernel_size=4, stride=2),
                                             nn.ReLU(),
-                                            nn.Conv2d(64, 64, kernel_size=4, stride=2, padding=0),
+                                            nn.Conv2d(64, 128, kernel_size=4, stride=2),
                                             nn.ReLU(),
-                                            nn.Flatten(),
+                                            nn.Conv2d(128, 256, kernel_size=4, stride=2),
+                                            nn.ReLU()
                                             )
+
+                self.cnn = smallcnn
 
                 # Compute shape by doing one forward pass
                 with th.no_grad():
@@ -49,8 +65,9 @@ class RoboSkateCombinedFeaturesExtractor(BaseFeaturesExtractor):
 
             elif key == "numeric":
                 # Run through a simple MLP
-                extractors[key] = nn.Linear(subspace.shape[0], 16)
-                total_concat_size += 16
+                extractors[key] = nn.Identity() #nn.Linear(subspace.shape[0], 16)
+                total_concat_size += 14
+                # TODO: Manual set number of numerical features
 
         self.extractors = nn.ModuleDict(extractors)
 
