@@ -540,6 +540,13 @@ class DictReplayBuffer(ReplayBuffer):
                     "This system does not have apparently enough memory to store the complete "
                     f"replay buffer {total_memory_usage:.2f}GB > {mem_available:.2f}GB"
                 )
+            else:
+                # Convert to GB
+                total_memory_usage /= 1e9
+                mem_available /= 1e9
+                warnings.warn(
+                    f"replay buffer {total_memory_usage:.2f}GB"
+                )
 
     def add(
         self,

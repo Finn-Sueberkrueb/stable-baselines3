@@ -25,26 +25,20 @@ class RoboSkateCombinedFeaturesExtractor(BaseFeaturesExtractor):
                 # get imput layer (mostly RGB)
                 n_input_channels = subspace.shape[0]
                 #define CNN Layer
-                # small CNN version
-                smallcnn = nn.Sequential(nn.Conv2d(n_input_channels, 32, kernel_size=6, stride=3),
-                                         nn.ReLU(),
-                                         nn.Conv2d(32, 64, kernel_size=4, stride=2),
-                                         nn.ReLU(),
-                                         nn.Conv2d(64, 128, kernel_size=4, stride=2),
-                                         nn.ReLU()
+                self.cnn = nn.Sequential(   # ((in+2*pad-Kern)/Str)+1
+                                            # 3 x 30 x 98
+                                            nn.Conv2d(n_input_channels, 16, kernel_size=4, stride=2),
+                                            nn.ReLU(),
+                                            # 16 x 14 x 48
+                                            nn.Conv2d(16, 32, kernel_size=4, stride=2),
+                                            nn.ReLU(),
+                                            # 32 x 6 x 23
+                                            nn.Conv2d(32, 64, kernel_size=[3,3], stride=[1,2]),
+                                            nn.ReLU(),
+                                            # 64 x 4 x 11 = 2816
+                                            nn.Flatten()
                                          )
-                # large CNN version
-                largecnn = nn.Sequential(   nn.Conv2d(n_input_channels, 32, kernel_size=4, stride=2),
-                                            nn.ReLU(),
-                                            nn.Conv2d(32, 64, kernel_size=4, stride=2),
-                                            nn.ReLU(),
-                                            nn.Conv2d(64, 128, kernel_size=4, stride=2),
-                                            nn.ReLU(),
-                                            nn.Conv2d(128, 256, kernel_size=4, stride=2),
-                                            nn.ReLU()
-                                            )
 
-                self.cnn = smallcnn
 
                 # Compute shape by doing one forward pass
                 with th.no_grad():
@@ -52,13 +46,14 @@ class RoboSkateCombinedFeaturesExtractor(BaseFeaturesExtractor):
                         th.as_tensor(subspace.sample()[None]).float()
                     ).shape[1]
 
-                print("CNN output size before linear: " + str(n_flatten))
+                print("Flatten CNN output size: " + str(n_flatten))
 
                 # define Linear layer after CNN
                 self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim),
                                             nn.ReLU(),
                                             )
-
+                print(n_flatten)
+                print(features_dim)
                 extractors[key] = nn.Sequential(self.cnn, self.linear)
                 # Set the feature dimention as the CNN latent space so the feature dimesnon will be lager (+numeric)
                 total_concat_size += features_dim
