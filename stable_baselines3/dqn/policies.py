@@ -67,6 +67,23 @@ class QNetwork(BasePolicy):
 
     def _predict(self, observation: th.Tensor, deterministic: bool = True) -> th.Tensor:
         q_values = self.forward(observation)
+        '''
+        # --------------------------------- softmax_policy for entropy ---------------------------------
+        # calculate denominator of SoftMax {SUM exp(q(s,a))}
+        denominator = th.diag(1 / th.exp(q_values).sum(dim=1))
+        # use diagonal denominator matrix for elementwise multiplication with nominator
+        next_pol_prob = th.matmul(denominator, th.exp(q_values))
+        next_log_prob = th.log(next_pol_prob)
+        # Entropy: SUM p(a)*log(p(a))
+        next_action_entropy_single_values = next_pol_prob * next_log_prob
+        next_action_entropy = next_action_entropy_single_values.sum(dim=1)
+        # Avoid potential broadcast issue
+        next_action_entropy = next_action_entropy.reshape(-1, 1)
+
+        tempreture_param = 0.03
+
+        q_values += tempreture_param*next_action_entropy
+        '''
         # Greedy action
         action = q_values.argmax(dim=1).reshape(-1)
         return action
