@@ -63,7 +63,7 @@ class RoboSkateCombinedFeaturesExtractor(BaseFeaturesExtractor):
             elif key == "numeric":
                 # Run through a simple MLP
                 extractors[key] = nn.Identity() #nn.Linear(subspace.shape[0], 16)
-                total_concat_size += 11
+                total_concat_size += 9
                 # TODO: Manual set number of numerical features
 
         self.extractors = nn.ModuleDict(extractors)
