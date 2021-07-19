@@ -191,9 +191,9 @@ class Actor(BasePolicy):
 
     # Added by Finn
     def replay_action_log_prob(self, action: th.Tensor, obs: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
-        _ , log_std, kwargs = self.get_action_dist_params(obs)
+        mean_new_actions , log_std, kwargs = self.get_action_dist_params(obs)
         # return action and associated log prob
-        return self.action_dist.log_prob_from_action(action, log_std, **kwargs)
+        return self.action_dist.log_prob_from_action(mean_new_actions, action, log_std, **kwargs)
 
     def _predict(self, observation: th.Tensor, deterministic: bool = False) -> th.Tensor:
         return self.forward(observation, deterministic)

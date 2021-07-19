@@ -256,9 +256,10 @@ class SquashedDiagGaussianDistribution(DiagGaussianDistribution):
         return action, log_prob
 
     # added by Finn
-    def log_prob_from_action(self, action: th.Tensor, log_std: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
-        log_prob = self.log_prob(action, self.gaussian_actions)
-        return action, log_prob
+    def log_prob_from_action(self, mean_new_actions: th.Tensor, replay_actions: th.Tensor, log_std: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
+        new_actions = self.actions_from_params(mean_new_actions, log_std)
+        log_prob = self.log_prob(replay_actions, self.gaussian_actions)
+        return replay_actions, log_prob
 
 
 class CategoricalDistribution(Distribution):
@@ -613,9 +614,10 @@ class StateDependentNoiseDistribution(Distribution):
 
     # added by Finn
     def log_prob_from_action(
-        self, actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor
+        self, mean_new_actions: th.Tensor, replay_actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor
     ) -> Tuple[th.Tensor, th.Tensor]:
-        log_prob = self.log_prob(actions)
+        new_actions = self.actions_from_params(mean_new_actions, log_std, latent_sde)
+        log_prob = self.log_prob(replay_actions)
         return actions, log_prob
 
 
