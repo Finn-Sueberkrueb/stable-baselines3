@@ -618,7 +618,7 @@ class StateDependentNoiseDistribution(Distribution):
     ) -> Tuple[th.Tensor, th.Tensor]:
         new_actions = self.actions_from_params(mean_new_actions, log_std, latent_sde)
         log_prob = self.log_prob(replay_actions)
-        return actions, log_prob
+        return replay_actions, log_prob
 
 
 
