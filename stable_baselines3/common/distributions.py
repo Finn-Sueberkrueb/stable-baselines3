@@ -96,6 +96,15 @@ class Distribution(ABC):
         :return: actions and log prob
         """
 
+    @abstractmethod
+    def log_prob_from_action(self, *args, **kwargs) -> Tuple[th.Tensor, th.Tensor]:
+        """
+        Returns samples and the associated log probabilities
+        from the probability distribution given its parameters.
+
+        :return: actions and log prob
+        """
+
 
 def sum_independent_dims(tensor: th.Tensor) -> th.Tensor:
     """
@@ -192,6 +201,7 @@ class DiagGaussianDistribution(Distribution):
         return actions, log_prob
 
 
+
 class SquashedDiagGaussianDistribution(DiagGaussianDistribution):
     """
     Gaussian distribution with diagonal covariance matrix, followed by a squashing function (tanh) to ensure bounds.
@@ -242,6 +252,11 @@ class SquashedDiagGaussianDistribution(DiagGaussianDistribution):
 
     def log_prob_from_params(self, mean_actions: th.Tensor, log_std: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
         action = self.actions_from_params(mean_actions, log_std)
+        log_prob = self.log_prob(action, self.gaussian_actions)
+        return action, log_prob
+
+    # added by Finn
+    def log_prob_from_action(self, action: th.Tensor, log_std: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
         log_prob = self.log_prob(action, self.gaussian_actions)
         return action, log_prob
 
@@ -595,6 +610,15 @@ class StateDependentNoiseDistribution(Distribution):
         actions = self.actions_from_params(mean_actions, log_std, latent_sde)
         log_prob = self.log_prob(actions)
         return actions, log_prob
+
+    # added by Finn
+    def log_prob_from_action(
+        self, actions: th.Tensor, log_std: th.Tensor, latent_sde: th.Tensor
+    ) -> Tuple[th.Tensor, th.Tensor]:
+        log_prob = self.log_prob(actions)
+        return actions, log_prob
+
+
 
 
 class TanhBijector(object):
